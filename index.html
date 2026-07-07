@@ -3,9 +3,1186 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EarthIQ</title>
+    <title>EarthIQ — From Geospatial Data to Business Intelligence</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --accent: #00e5a0;
+            --accent2: #00b4d8;
+            --dark: #050a14;
+            --dark2: #0a1628;
+            --dark3: #111d35;
+        }
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Inter', sans-serif; background: var(--dark); color: #c8d6e5; overflow-x: hidden; margin: 0; padding: 0; }
+        pre { margin: 0; padding: 0; }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--dark); }
+        ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 3px; }
+
+        /* Globe Canvas */
+        #globe-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; }
+
+        /* Animated Grid Background */
+        .grid-bg {
+            background-image:
+                linear-gradient(rgba(0,229,160,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,229,160,0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+        }
+
+        /* Glow effects */
+        .glow-green { text-shadow: 0 0 40px rgba(0,229,160,0.3); }
+        .glow-box { box-shadow: 0 0 60px rgba(0,229,160,0.08), inset 0 1px 0 rgba(255,255,255,0.05); }
+        .glow-border { border: 1px solid rgba(0,229,160,0.15); }
+
+        /* Floating animation */
+        @keyframes float { 0%,100% { transform: translateY(0px); } 50% { transform: translateY(-20px); } }
+        .float { animation: float 6s ease-in-out infinite; }
+        .float-delay { animation: float 6s ease-in-out 2s infinite; }
+        .float-delay2 { animation: float 6s ease-in-out 4s infinite; }
+
+        /* Pulse ring */
+        @keyframes pulse-ring {
+            0% { transform: scale(0.8); opacity: 1; }
+            100% { transform: scale(2.5); opacity: 0; }
+        }
+        .pulse-ring::before {
+            content: '';
+            position: absolute;
+            inset: -8px;
+            border: 2px solid var(--accent);
+            border-radius: 50%;
+            animation: pulse-ring 2s ease-out infinite;
+        }
+
+        /* Gradient text */
+        .gradient-text {
+            background: linear-gradient(135deg, #00e5a0, #00b4d8, #7c5cfc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Scan line */
+        @keyframes scan {
+            0% { top: -5%; }
+            100% { top: 105%; }
+        }
+        .scan-line::after {
+            content: '';
+            position: absolute;
+            left: 0; width: 100%; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            animation: scan 4s linear infinite;
+            opacity: 0.4;
+        }
+
+        /* Card hover */
+        .card-hover {
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .card-hover:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 60px rgba(0,229,160,0.12);
+            border-color: rgba(0,229,160,0.4);
+        }
+
+        /* Typing cursor */
+        @keyframes blink { 0%,50% { opacity: 1; } 51%,100% { opacity: 0; } }
+        .cursor { animation: blink 1s step-end infinite; }
+
+        /* Particle canvas */
+        #particles { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+
+        /* Nav blur */
+        .nav-blur { backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+
+        /* Data flow lines */
+        @keyframes dataflow {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 200% 0%; }
+        }
+        .data-flow {
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            background-size: 200% 100%;
+            animation: dataflow 3s linear infinite;
+        }
+
+        /* Module icon containers */
+        .module-icon {
+            width: 56px; height: 56px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 14px;
+            background: linear-gradient(135deg, rgba(0,229,160,0.1), rgba(0,180,216,0.1));
+            border: 1px solid rgba(0,229,160,0.2);
+        }
+
+        /* Architecture diagram connector */
+        .connector {
+            position: relative;
+        }
+        .connector::after {
+            content: '';
+            position: absolute;
+            bottom: -32px;
+            left: 50%;
+            width: 2px;
+            height: 32px;
+            background: linear-gradient(to bottom, rgba(0,229,160,0.4), transparent);
+        }
+
+        /* Mobile menu */
+        .mobile-menu {
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+        .mobile-menu.open {
+            transform: translateX(0);
+        }
+
+        /* Orbit animation */
+        @keyframes orbit {
+            0% { transform: rotate(0deg) translateX(140px) rotate(0deg); }
+            100% { transform: rotate(360deg) translateX(140px) rotate(-360deg); }
+        }
+        @keyframes orbit-reverse {
+            0% { transform: rotate(0deg) translateX(100px) rotate(0deg); }
+            100% { transform: rotate(-360deg) translateX(100px) rotate(360deg); }
+        }
+        .orbit-1 { animation: orbit 12s linear infinite; }
+        .orbit-2 { animation: orbit 18s linear infinite; animation-delay: -4s; }
+        .orbit-3 { animation: orbit-reverse 15s linear infinite; }
+
+        /* Stats counter */
+        @keyframes countUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .stat-animate { animation: countUp 0.8s ease-out forwards; }
+
+        /* Code block styling */
+        .code-block {
+            background: rgba(5,10,20,0.8);
+            border: 1px solid rgba(0,229,160,0.15);
+            border-radius: 12px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Smooth reveal on scroll */
+        .reveal {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Hero gradient overlay */
+        .hero-gradient {
+            background: radial-gradient(ellipse at 30% 20%, rgba(0,229,160,0.08) 0%, transparent 50%),
+                        radial-gradient(ellipse at 70% 80%, rgba(0,180,216,0.06) 0%, transparent 50%),
+                        radial-gradient(ellipse at 50% 50%, rgba(124,92,252,0.04) 0%, transparent 60%);
+        }
+    </style>
 </head>
-<body>
-    EarthIQ - Geospatial Data Platform - coming soon!!
+<body class="grid-bg">
+
+    <!-- Particles Background -->
+    <canvas id="particles"></canvas>
+
+    <!-- Navigation -->
+    <nav id="navbar" class="fixed top-0 left-0 right-0 z-50 transition-all duration-500">
+        <div class="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 py-4 flex items-center justify-between">
+            <!-- Logo -->
+            <a href="#" class="flex items-center gap-3 group">
+                <div class="relative w-10 h-10">
+                    <svg viewBox="0 0 40 40" class="w-10 h-10">
+                        <circle cx="20" cy="20" r="16" fill="none" stroke="url(#logoGrad)" stroke-width="1.5" opacity="0.6"/>
+                        <circle cx="20" cy="20" r="10" fill="none" stroke="url(#logoGrad)" stroke-width="1.5"/>
+                        <ellipse cx="20" cy="20" rx="16" ry="6" fill="none" stroke="url(#logoGrad)" stroke-width="1" transform="rotate(-25 20 20)" opacity="0.4"/>
+                        <ellipse cx="20" cy="20" rx="16" ry="6" fill="none" stroke="url(#logoGrad)" stroke-width="1" transform="rotate(25 20 20)" opacity="0.4"/>
+                        <circle cx="20" cy="20" r="3" fill="url(#logoGrad)"/>
+                        <defs>
+                            <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#00e5a0"/>
+                                <stop offset="100%" stop-color="#00b4d8"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+                <span class="text-xl font-bold text-white tracking-tight">Earth<span class="gradient-text">IQ</span></span>
+            </a>
+
+            <!-- Desktop Nav -->
+            <div class="hidden md:flex items-center gap-8">
+                <a href="#features" class="text-sm text-gray-400 hover:text-[#00e5a0] transition-colors duration-300">Features</a>
+                <a href="#modules" class="text-sm text-gray-400 hover:text-[#00e5a0] transition-colors duration-300">Modules</a>
+                <a href="#architecture" class="text-sm text-gray-400 hover:text-[#00e5a0] transition-colors duration-300">Architecture</a>
+                <a href="#deploy" class="text-sm text-gray-400 hover:text-[#00e5a0] transition-colors duration-300">Deploy</a>
+                <a href="https://github.com/EarthIQ" target="_blank" class="flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-[#00e5a0]/10 to-[#00b4d8]/10 border border-[#00e5a0]/30 text-[#00e5a0] text-sm font-medium hover:border-[#00e5a0]/60 hover:bg-[#00e5a0]/15 transition-all duration-300">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    GitHub
+                </a>
+            </div>
+
+            <!-- Mobile Toggle -->
+            <button id="menu-toggle" class="md:hidden text-white p-2">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+            </button>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="mobile-menu fixed top-0 right-0 w-72 h-full bg-[#0a1628]/95 nav-blur border-l border-[#00e5a0]/10 p-8 md:hidden z-50">
+            <button id="menu-close" class="absolute top-4 right-4 text-white p-2">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+            <div class="flex flex-col gap-6 mt-16">
+                <a href="#features" class="text-lg text-gray-300 hover:text-[#00e5a0]">Features</a>
+                <a href="#modules" class="text-lg text-gray-300 hover:text-[#00e5a0]">Modules</a>
+                <a href="#architecture" class="text-lg text-gray-300 hover:text-[#00e5a0]">Architecture</a>
+                <a href="#deploy" class="text-lg text-gray-300 hover:text-[#00e5a0]">Deploy</a>
+                <a href="https://github.com/EarthIQ" target="_blank" class="flex items-center gap-2 text-[#00e5a0]">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    Star on GitHub
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ========== HERO SECTION ========== -->
+    <section id="hero" class="relative min-h-screen flex items-center justify-center overflow-hidden hero-gradient">
+        <!-- Animated globe background -->
+        <canvas id="globe-canvas"></canvas>
+
+        <!-- Overlay gradient -->
+        <div class="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#050a14] z-10"></div>
+
+        <div class="relative z-20 max-w-6xl mx-auto px-5 sm:px-8 lg:px-10 text-center pt-28 md:pt-32">
+            <!-- Badge -->
+            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#00e5a0]/5 border border-[#00e5a0]/20 mb-6 md:mb-8 float">
+                <span class="w-2 h-2 rounded-full bg-[#00e5a0] animate-pulse"></span>
+                <span class="text-xs font-medium text-[#00e5a0] tracking-wider uppercase">Open Source · MIT License</span>
+            </div>
+
+            <!-- Main Heading -->
+            <h1 class="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black text-white leading-[1.08] mb-5 md:mb-6 tracking-tight">
+                From Geospatial Data<br>
+                <span class="gradient-text">to Business Intelligence</span>
+            </h1>
+
+            <!-- Subtitle -->
+            <p class="text-base sm:text-lg md:text-xl text-gray-400 max-w-3xl mx-auto mb-8 md:mb-10 leading-relaxed px-2 sm:px-0">
+                The modular, self-hosted platform for geospatial data storage, management, processing, analysis & visualization — all supercharged with AI.
+            </p>
+
+            <!-- CTA Buttons -->
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-10 md:mb-14">
+                <a href="https://github.com/EarthIQ" target="_blank" class="group flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-[#00e5a0] to-[#00b4d8] rounded-full text-[#050a14] font-semibold text-base hover:shadow-[0_0_40px_rgba(0,229,160,0.3)] transition-all duration-500 hover:scale-105">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    Get Started on GitHub
+                    <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                </a>
+                <a href="#features" class="flex items-center gap-2 px-8 py-4 rounded-full border border-white/10 text-white font-medium text-base hover:border-[#00e5a0]/40 hover:bg-white/5 transition-all duration-300">
+                    Explore Platform
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </a>
+            </div>
+
+            <!-- Terminal Preview -->
+            <div class="max-w-2xl mx-auto code-block p-0 overflow-hidden float-delay">
+                <div class="flex items-center gap-2 px-4 py-3 border-b border-white/5">
+                    <span class="w-3 h-3 rounded-full bg-red-500/60"></span>
+                    <span class="w-3 h-3 rounded-full bg-yellow-500/60"></span>
+                    <span class="w-3 h-3 rounded-full bg-green-500/60"></span>
+                    <span class="ml-auto text-[10px] text-gray-600 font-mono">terminal</span>
+                </div>
+                <div class="p-5 text-left text-sm leading-7">
+                    <div><span class="text-[#00e5a0]">$</span> <span class="text-gray-400">git clone</span> <span class="text-[#00b4d8]">https://github.com/EarthIQ/earthiq.git</span></div>
+                    <div><span class="text-[#00e5a0]">$</span> <span class="text-gray-400">cd earthiq && docker compose up</span></div>
+                    <div class="text-gray-600 mt-1">✓ Geo-storage ready on :5432</div>
+                    <div class="text-gray-600">✓ Processing engine on :8080</div>
+                    <div class="text-gray-600">✓ AI pipeline on :9090</div>
+                    <div class="text-[#00e5a0] mt-1">🌍 EarthIQ is running at <span class="underline">http://localhost:3000</span><span class="cursor text-white">▌</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scroll indicator -->
+        <div class="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2 animate-bounce">
+            <span class="text-[10px] uppercase tracking-[3px] text-gray-600">Scroll</span>
+            <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7"/></svg>
+        </div>
+    </section>
+
+    <!-- ========== STATS BAR ========== -->
+    <section class="relative z-30 -mt-4 md:-mt-6">
+        <div class="max-w-5xl mx-auto px-5 sm:px-8 lg:px-10">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-0 py-5 md:py-6 px-4 md:px-6 rounded-2xl bg-[#0a1628]/80 border border-white/5 nav-blur">
+                <div class="text-center py-3 px-2">
+                    <div class="text-2xl md:text-3xl font-black gradient-text mb-1" data-count="100">100%</div>
+                    <div class="text-[10px] md:text-xs text-gray-500 uppercase tracking-wider">Open Source</div>
+                </div>
+                <div class="text-center py-3 px-2 border-l border-white/5">
+                    <div class="text-2xl md:text-3xl font-black gradient-text mb-1">12+</div>
+                    <div class="text-[10px] md:text-xs text-gray-500 uppercase tracking-wider">Core Modules</div>
+                </div>
+                <div class="text-center py-3 px-2 border-l border-white/5">
+                    <div class="text-2xl md:text-3xl font-black gradient-text mb-1">50+</div>
+                    <div class="text-[10px] md:text-xs text-gray-500 uppercase tracking-wider">Data Formats</div>
+                </div>
+                <div class="text-center py-3 px-2 border-l border-white/5">
+                    <div class="text-2xl md:text-3xl font-black gradient-text mb-1">MIT</div>
+                    <div class="text-[10px] md:text-xs text-gray-500 uppercase tracking-wider">License</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== FEATURES SECTION ========== -->
+    <section id="features" class="relative py-20 md:py-28 overflow-hidden">
+        <div class="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10">
+            <!-- Section Header -->
+            <div class="text-center mb-12 md:mb-16 reveal">
+                <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#00e5a0]/5 border border-[#00e5a0]/20 mb-6">
+                    <span class="text-[10px] font-semibold text-[#00e5a0] tracking-widest uppercase">Core Capabilities</span>
+                </div>
+                <h2 class="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-4 md:mb-5">
+                    Everything You Need for<br><span class="gradient-text">Geospatial Intelligence</span>
+                </h2>
+                <p class="text-gray-400 max-w-2xl mx-auto text-base md:text-lg px-2 sm:px-0">
+                    A complete, modular platform designed for organizations that need full control over their geospatial data pipeline.
+                </p>
+            </div>
+
+            <!-- Feature Cards -->
+            <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
+                <!-- Card 1 -->
+                <div class="reveal card-hover p-5 sm:p-6 lg:p-7 rounded-2xl bg-[#0a1628]/60 border border-white/5 glow-border relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-[#00e5a0]/5 to-transparent rounded-bl-full"></div>
+                    <div class="module-icon mb-4 md:mb-5">
+                        <svg class="w-6 h-6 text-[#00e5a0]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-3">Geo-Data Storage</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed">Enterprise-grade spatial database optimized for vector, raster, point cloud, and temporal geospatial data at any scale.</p>
+                    <div class="mt-6 flex flex-wrap gap-2">
+                        <span class="text-[10px] px-2.5 py-1 rounded-full bg-white/5 text-gray-500">PostGIS</span>
+                        <span class="text-[10px] px-2.5 py-1 rounded-full bg-white/5 text-gray-500">S3</span>
+                        <span class="text-[10px] px-2.5 py-1 rounded-full bg-white/5 text-gray-500">COG</span>
+                    </div>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="reveal card-hover p-5 sm:p-6 lg:p-7 rounded-2xl bg-[#0a1628]/60 border border-white/5 glow-border relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-[#00b4d8]/5 to-transparent rounded-bl-full"></div>
+                    <div class="module-icon mb-4 md:mb-5">
+                        <svg class="w-6 h-6 text-[#00b4d8]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-3">AI Processing Engine</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed">Built-in ML pipelines for object detection, change analysis, land classification, and anomaly detection on satellite imagery.</p>
+                    <div class="mt-6 flex flex-wrap gap-2">
+                        <span class="text-[10px] px-2.5 py-1 rounded-full bg-white/5 text-gray-500">PyTorch</span>
+                        <span class="text-[10px] px-2.5 py-1 rounded-full bg-white/5 text-gray-500">ONNX</span>
+                        <span class="text-[10px] px-2.5 py-1 rounded-full bg-white/5 text-gray-500">GPU</span>
+                    </div>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="reveal card-hover p-5 sm:p-6 lg:p-7 rounded-2xl bg-[#0a1628]/60 border border-white/5 glow-border relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-[#7c5cfc]/5 to-transparent rounded-bl-full"></div>
+                    <div class="module-icon mb-4 md:mb-5">
+                        <svg class="w-6 h-6 text-[#7c5cfc]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-3">Interactive Visualization</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed">Render millions of features in real-time with WebGL-powered maps, 3D terrain views, and customizable dashboards.</p>
+                    <div class="mt-6 flex flex-wrap gap-2">
+                        <span class="text-[10px] px-2.5 py-1 rounded-full bg-white/5 text-gray-500">MapLibre</span>
+                        <span class="text-[10px] px-2.5 py-1 rounded-full bg-white/5 text-gray-500">Deck.gl</span>
+                        <span class="text-[10px] px-2.5 py-1 rounded-full bg-white/5 text-gray-500">3D</span>
+                    </div>
+                </div>
+
+                <!-- Card 4 -->
+                <div class="reveal card-hover p-5 sm:p-6 lg:p-7 rounded-2xl bg-[#0a1628]/60 border border-white/5 glow-border relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-[#00e5a0]/5 to-transparent rounded-bl-full"></div>
+                    <div class="module-icon mb-4 md:mb-5">
+                        <svg class="w-6 h-6 text-[#00e5a0]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-3">Data Management</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed">STAC-compliant catalog with versioning, metadata management, access controls, and automated data quality validation.</p>
+                    <div class="mt-6 flex flex-wrap gap-2">
+                        <span class="text-[10px] px-2.5 py-1 rounded-full bg-white/5 text-gray-500">STAC</span>
+                        <span class="text-[10px] px-2.5 py-1 rounded-full bg-white/5 text-gray-500">OGC</span>
+                        <span class="text-[10px] px-2.5 py-1 rounded-full bg-white/5 text-gray-500">RBAC</span>
+                    </div>
+                </div>
+
+                <!-- Card 5 -->
+                <div class="reveal card-hover p-5 sm:p-6 lg:p-7 rounded-2xl bg-[#0a1628]/60 border border-white/5 glow-border relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-[#00b4d8]/5 to-transparent rounded-bl-full"></div>
+                    <div class="module-icon mb-4 md:mb-5">
+                        <svg class="w-6 h-6 text-[#00b4d8]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-3">ETL & Processing</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed">Automated workflows for ingestion, transformation, reprojection, tiling, and batch processing of geospatial datasets.</p>
+                    <div class="mt-6 flex flex-wrap gap-2">
+                        <span class="text-[10px] px-2.5 py-1 rounded-full bg-white/5 text-gray-500">GDAL</span>
+                        <span class="text-[10px] px-2.5 py-1 rounded-full bg-white/5 text-gray-500">Airflow</span>
+                        <span class="text-[10px] px-2.5 py-1 rounded-full bg-white/5 text-gray-500">Spark</span>
+                    </div>
+                </div>
+
+                <!-- Card 6 -->
+                <div class="reveal card-hover p-5 sm:p-6 lg:p-7 rounded-2xl bg-[#0a1628]/60 border border-white/5 glow-border relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-[#7c5cfc]/5 to-transparent rounded-bl-full"></div>
+                    <div class="module-icon mb-4 md:mb-5">
+                        <svg class="w-6 h-6 text-[#7c5cfc]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-3">Self-Hosted & Secure</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed">Deploy on your own infrastructure. Full data sovereignty with SSO integration, audit logs, and encryption at rest.</p>
+                    <div class="mt-6 flex flex-wrap gap-2">
+                        <span class="text-[10px] px-2.5 py-1 rounded-full bg-white/5 text-gray-500">Docker</span>
+                        <span class="text-[10px] px-2.5 py-1 rounded-full bg-white/5 text-gray-500">K8s</span>
+                        <span class="text-[10px] px-2.5 py-1 rounded-full bg-white/5 text-gray-500">SSO</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== MODULES SECTION ========== -->
+    <section id="modules" class="relative py-20 md:py-28 overflow-hidden">
+        <!-- Decorative bg -->
+        <div class="absolute inset-0 bg-gradient-to-b from-transparent via-[#00e5a0]/[0.02] to-transparent"></div>
+
+        <div class="relative max-w-7xl mx-auto px-5 sm:px-8 lg:px-10">
+            <div class="text-center mb-12 md:mb-16 reveal">
+                <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#00b4d8]/5 border border-[#00b4d8]/20 mb-6">
+                    <span class="text-[10px] font-semibold text-[#00b4d8] tracking-widest uppercase">Modular Design</span>
+                </div>
+                <h2 class="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-4 md:mb-5">
+                    Pick the Modules<br><span class="gradient-text">You Need</span>
+                </h2>
+                <p class="text-gray-400 max-w-2xl mx-auto text-base md:text-lg px-2 sm:px-0">
+                    Every component is an independent, pluggable module. Deploy the full stack or just the pieces your organization requires.
+                </p>
+            </div>
+
+            <!-- Module Grid - Orbit Style -->
+            <div class="relative max-w-4xl mx-auto">
+                <!-- Center hub -->
+                <div class="reveal flex flex-col items-center mb-10 md:mb-14">
+                    <div class="relative">
+                        <div class="w-32 h-32 rounded-full bg-gradient-to-br from-[#00e5a0]/20 to-[#00b4d8]/20 border border-[#00e5a0]/30 flex items-center justify-center">
+                            <div class="w-20 h-20 rounded-full bg-gradient-to-br from-[#00e5a0]/30 to-[#00b4d8]/30 border border-[#00e5a0]/40 flex items-center justify-center">
+                                <svg class="w-8 h-8 text-[#00e5a0]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            </div>
+                        </div>
+                        <div class="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-[#00e5a0] flex items-center justify-center animate-pulse">
+                            <span class="text-[8px] font-bold text-[#050a14]">AI</span>
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-500 mt-4 font-medium">EarthIQ Core</p>
+                </div>
+
+                <!-- Module List -->
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+                    <div class="reveal card-hover p-5 rounded-xl bg-[#0a1628]/80 border border-white/5 text-center group cursor-default">
+                        <div class="text-2xl mb-2">🗄️</div>
+                        <h4 class="text-sm font-semibold text-white mb-1">GeoStore</h4>
+                        <p class="text-[11px] text-gray-500">Spatial database engine</p>
+                    </div>
+                    <div class="reveal card-hover p-5 rounded-xl bg-[#0a1628]/80 border border-white/5 text-center group cursor-default">
+                        <div class="text-2xl mb-2">🔄</div>
+                        <h4 class="text-sm font-semibold text-white mb-1">GeoFlow</h4>
+                        <p class="text-[11px] text-gray-500">ETL pipeline engine</p>
+                    </div>
+                    <div class="reveal card-hover p-5 rounded-xl bg-[#0a1628]/80 border border-white/5 text-center group cursor-default">
+                        <div class="text-2xl mb-2">🤖</div>
+                        <h4 class="text-sm font-semibold text-white mb-1">GeoAI</h4>
+                        <p class="text-[11px] text-gray-500">ML inference service</p>
+                    </div>
+                    <div class="reveal card-hover p-5 rounded-xl bg-[#0a1628]/80 border border-white/5 text-center group cursor-default">
+                        <div class="text-2xl mb-2">🗺️</div>
+                        <h4 class="text-sm font-semibold text-white mb-1">GeoView</h4>
+                        <p class="text-[11px] text-gray-500">Map visualization</p>
+                    </div>
+                    <div class="reveal card-hover p-5 rounded-xl bg-[#0a1628]/80 border border-white/5 text-center group cursor-default">
+                        <div class="text-2xl mb-2">📊</div>
+                        <h4 class="text-sm font-semibold text-white mb-1">GeoDash</h4>
+                        <p class="text-[11px] text-gray-500">Analytics dashboard</p>
+                    </div>
+                    <div class="reveal card-hover p-5 rounded-xl bg-[#0a1628]/80 border border-white/5 text-center group cursor-default">
+                        <div class="text-2xl mb-2">📡</div>
+                        <h4 class="text-sm font-semibold text-white mb-1">GeoStream</h4>
+                        <p class="text-[11px] text-gray-500">Real-time data feeds</p>
+                    </div>
+                    <div class="reveal card-hover p-5 rounded-xl bg-[#0a1628]/80 border border-white/5 text-center group cursor-default">
+                        <div class="text-2xl mb-2">📁</div>
+                        <h4 class="text-sm font-semibold text-white mb-1">GeoCatalog</h4>
+                        <p class="text-[11px] text-gray-500">STAC metadata catalog</p>
+                    </div>
+                    <div class="reveal card-hover p-5 rounded-xl bg-[#0a1628]/80 border border-white/5 text-center group cursor-default">
+                        <div class="text-2xl mb-2">🔐</div>
+                        <h4 class="text-sm font-semibold text-white mb-1">GeoAuth</h4>
+                        <p class="text-[11px] text-gray-500">Auth & access control</p>
+                    </div>
+                    <div class="reveal card-hover p-5 rounded-xl bg-[#0a1628]/80 border border-white/5 text-center group cursor-default">
+                        <div class="text-2xl mb-2">🧩</div>
+                        <h4 class="text-sm font-semibold text-white mb-1">GeoTile</h4>
+                        <p class="text-[11px] text-gray-500">Vector & raster tiles</p>
+                    </div>
+                    <div class="reveal card-hover p-5 rounded-xl bg-[#0a1628]/80 border border-white/5 text-center group cursor-default">
+                        <div class="text-2xl mb-2">🔌</div>
+                        <h4 class="text-sm font-semibold text-white mb-1">GeoAPI</h4>
+                        <p class="text-[11px] text-gray-500">REST & GraphQL gateway</p>
+                    </div>
+                    <div class="reveal card-hover p-5 rounded-xl bg-[#0a1628]/80 border border-white/5 text-center group cursor-default">
+                        <div class="text-2xl mb-2">🌐</div>
+                        <h4 class="text-sm font-semibold text-white mb-1">GeoSync</h4>
+                        <p class="text-[11px] text-gray-500">Multi-node replication</p>
+                    </div>
+                    <div class="reveal card-hover p-5 rounded-xl bg-[#0a1628]/80 border border-white/5 text-center group cursor-default">
+                        <div class="text-2xl mb-2">📈</div>
+                        <h4 class="text-sm font-semibold text-white mb-1">GeoInsight</h4>
+                        <p class="text-[11px] text-gray-500">BI reports & analytics</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== ARCHITECTURE SECTION ========== -->
+    <section id="architecture" class="relative py-20 md:py-28 overflow-hidden">
+        <div class="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10">
+            <div class="text-center mb-12 md:mb-16 reveal">
+                <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#7c5cfc]/5 border border-[#7c5cfc]/20 mb-6">
+                    <span class="text-[10px] font-semibold text-[#7c5cfc] tracking-widest uppercase">How It Works</span>
+                </div>
+                <h2 class="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-4 md:mb-5">
+                    Designed for<br><span class="gradient-text">Scale & Flexibility</span>
+                </h2>
+                <p class="text-gray-400 max-w-2xl mx-auto text-base md:text-lg px-2 sm:px-0">
+                    A layered, microservices architecture that scales from a single Docker Compose to a full Kubernetes cluster.
+                </p>
+            </div>
+
+            <!-- Architecture Diagram -->
+            <div class="reveal max-w-4xl mx-auto">
+                <!-- Layer 1: Data Sources -->
+                <div class="connector mb-8">
+                    <div class="text-center mb-3">
+                        <span class="text-[10px] uppercase tracking-widest text-gray-600 font-medium">Data Sources</span>
+                    </div>
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+                        <div class="p-3 rounded-lg bg-[#0a1628] border border-white/5 text-center">
+                            <div class="text-lg mb-1">🛰️</div>
+                            <span class="text-[10px] text-gray-500">Satellites</span>
+                        </div>
+                        <div class="p-3 rounded-lg bg-[#0a1628] border border-white/5 text-center">
+                            <div class="text-lg mb-1">✈️</div>
+                            <span class="text-[10px] text-gray-500">Drones</span>
+                        </div>
+                        <div class="p-3 rounded-lg bg-[#0a1628] border border-white/5 text-center">
+                            <div class="text-lg mb-1">📱</div>
+                            <span class="text-[10px] text-gray-500">IoT Sensors</span>
+                        </div>
+                        <div class="p-3 rounded-lg bg-[#0a1628] border border-white/5 text-center">
+                            <div class="text-lg mb-1">🌐</div>
+                            <span class="text-[10px] text-gray-500">Web APIs</span>
+                        </div>
+                        <div class="p-3 rounded-lg bg-[#0a1628] border border-white/5 text-center">
+                            <div class="text-lg mb-1">📂</div>
+                            <span class="text-[10px] text-gray-500">File Upload</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Arrow -->
+                <div class="flex justify-center my-4">
+                    <div class="w-px h-8 data-flow"></div>
+                </div>
+
+                <!-- Layer 2: Ingestion -->
+                <div class="connector mb-8">
+                    <div class="p-6 rounded-xl bg-gradient-to-r from-[#0a1628] to-[#111d35] border border-[#00e5a0]/15">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="w-3 h-3 rounded-full bg-[#00e5a0] animate-pulse"></div>
+                            <span class="text-sm font-semibold text-white">Ingestion & ETL Layer</span>
+                            <span class="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-[#00e5a0]/10 text-[#00e5a0]">GeoFlow</span>
+                        </div>
+                        <p class="text-xs text-gray-500">Automated pipelines for data ingestion, format conversion, reprojection, validation & indexing</p>
+                    </div>
+                </div>
+
+                <div class="flex justify-center my-4">
+                    <div class="w-px h-8 data-flow"></div>
+                </div>
+
+                <!-- Layer 3: Storage & Processing -->
+                <div class="connector mb-8">
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div class="p-6 rounded-xl bg-gradient-to-r from-[#0a1628] to-[#111d35] border border-[#00b4d8]/15">
+                            <div class="flex items-center gap-3 mb-3">
+                                <div class="w-3 h-3 rounded-full bg-[#00b4d8] animate-pulse"></div>
+                                <span class="text-sm font-semibold text-white">Storage Layer</span>
+                                <span class="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-[#00b4d8]/10 text-[#00b4d8]">GeoStore</span>
+                            </div>
+                            <div class="space-y-2 text-xs text-gray-500">
+                                <div class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-[#00b4d8]/50"></span>PostGIS / Vector DB</div>
+                                <div class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-[#00b4d8]/50"></span>Object Store (S3/MinIO)</div>
+                                <div class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-[#00b4d8]/50"></span>Tile Cache</div>
+                            </div>
+                        </div>
+                        <div class="p-6 rounded-xl bg-gradient-to-r from-[#0a1628] to-[#111d35] border border-[#7c5cfc]/15">
+                            <div class="flex items-center gap-3 mb-3">
+                                <div class="w-3 h-3 rounded-full bg-[#7c5cfc] animate-pulse"></div>
+                                <span class="text-sm font-semibold text-white">AI / ML Layer</span>
+                                <span class="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-[#7c5cfc]/10 text-[#7c5cfc]">GeoAI</span>
+                            </div>
+                            <div class="space-y-2 text-xs text-gray-500">
+                                <div class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-[#7c5cfc]/50"></span>Object Detection</div>
+                                <div class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-[#7c5cfc]/50"></span>Change Analysis</div>
+                                <div class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-[#7c5cfc]/50"></span>Classification</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-center my-4">
+                    <div class="w-px h-8 data-flow"></div>
+                </div>
+
+                <!-- Layer 4: API & Services -->
+                <div class="connector mb-8">
+                    <div class="p-6 rounded-xl bg-gradient-to-r from-[#0a1628] to-[#111d35] border border-white/10">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="w-3 h-3 rounded-full bg-white/40 animate-pulse"></div>
+                            <span class="text-sm font-semibold text-white">API Gateway & Services</span>
+                            <span class="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-white/5 text-gray-400">GeoAPI</span>
+                        </div>
+                        <div class="flex flex-wrap gap-3 text-xs text-gray-500">
+                            <span class="px-2.5 py-1 rounded bg-white/5">REST API</span>
+                            <span class="px-2.5 py-1 rounded bg-white/5">GraphQL</span>
+                            <span class="px-2.5 py-1 rounded bg-white/5">OGC WMS/WFS</span>
+                            <span class="px-2.5 py-1 rounded bg-white/5">STAC API</span>
+                            <span class="px-2.5 py-1 rounded bg-white/5">WebSocket</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-center my-4">
+                    <div class="w-px h-8 data-flow"></div>
+                </div>
+
+                <!-- Layer 5: Frontend -->
+                <div class="mb-8">
+                    <div class="p-6 rounded-xl bg-gradient-to-r from-[#00e5a0]/5 via-[#00b4d8]/5 to-[#7c5cfc]/5 border border-[#00e5a0]/20">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="w-3 h-3 rounded-full bg-[#00e5a0]"></div>
+                            <span class="text-sm font-semibold text-white">Visualization & BI Layer</span>
+                            <span class="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-[#00e5a0]/10 text-[#00e5a0]">GeoView + GeoDash</span>
+                        </div>
+                        <div class="flex flex-wrap gap-3 text-xs text-gray-500">
+                            <span class="px-2.5 py-1 rounded bg-white/5">Interactive Maps</span>
+                            <span class="px-2.5 py-1 rounded bg-white/5">3D Terrain</span>
+                            <span class="px-2.5 py-1 rounded bg-white/5">Dashboards</span>
+                            <span class="px-2.5 py-1 rounded bg-white/5">Reports</span>
+                            <span class="px-2.5 py-1 rounded bg-white/5">Embeds</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== USE CASES SECTION ========== -->
+    <section class="relative py-32 overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-b from-transparent via-[#00b4d8]/[0.02] to-transparent"></div>
+        <div class="relative max-w-7xl mx-auto px-6">
+            <div class="text-center mb-20 reveal">
+                <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#00e5a0]/5 border border-[#00e5a0]/20 mb-6">
+                    <span class="text-[10px] font-semibold text-[#00e5a0] tracking-widest uppercase">Use Cases</span>
+                </div>
+                <h2 class="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-6">
+                    Built for<br><span class="gradient-text">Real-World Impact</span>
+                </h2>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="reveal card-hover rounded-2xl overflow-hidden bg-[#0a1628] border border-white/5">
+                    <div class="h-48 overflow-hidden relative">
+                        <img src="https://images.pexels.com/photos/6906678/pexels-photo-6906678.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=300&w=500" alt="Infrastructure" class="w-full h-full object-cover opacity-60">
+                        <div class="absolute inset-0 bg-gradient-to-t from-[#0a1628] to-transparent"></div>
+                    </div>
+                    <div class="p-6 -mt-8 relative">
+                        <span class="text-[10px] uppercase tracking-widest text-[#00e5a0] font-semibold">Infrastructure</span>
+                        <h3 class="text-lg font-bold text-white mt-2 mb-2">Urban Planning & Smart Cities</h3>
+                        <p class="text-sm text-gray-400 leading-relaxed">Monitor urban sprawl, optimize transportation networks, and plan infrastructure with AI-powered spatial analysis.</p>
+                    </div>
+                </div>
+
+                <div class="reveal card-hover rounded-2xl overflow-hidden bg-[#0a1628] border border-white/5">
+                    <div class="h-48 overflow-hidden relative">
+                        <img src="https://images.pexels.com/photos/972942/pexels-photo-972942.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=300&w=500" alt="Agriculture" class="w-full h-full object-cover opacity-60">
+                        <div class="absolute inset-0 bg-gradient-to-t from-[#0a1628] to-transparent"></div>
+                    </div>
+                    <div class="p-6 -mt-8 relative">
+                        <span class="text-[10px] uppercase tracking-widest text-[#00b4d8] font-semibold">Agriculture</span>
+                        <h3 class="text-lg font-bold text-white mt-2 mb-2">Precision Agriculture</h3>
+                        <p class="text-sm text-gray-400 leading-relaxed">Analyze crop health with NDVI, predict yields, detect irrigation issues, and optimize farming operations with satellite data.</p>
+                    </div>
+                </div>
+
+                <div class="reveal card-hover rounded-2xl overflow-hidden bg-[#0a1628] border border-white/5">
+                    <div class="h-48 overflow-hidden relative">
+                        <img src="https://images.pexels.com/photos/17483871/pexels-photo-17483871.png?auto=compress&cs=tinysrgb&fit=crop&h=300&w=500" alt="Defense" class="w-full h-full object-cover opacity-60">
+                        <div class="absolute inset-0 bg-gradient-to-t from-[#0a1628] to-transparent"></div>
+                    </div>
+                    <div class="p-6 -mt-8 relative">
+                        <span class="text-[10px] uppercase tracking-widest text-[#7c5cfc] font-semibold">Environment</span>
+                        <h3 class="text-lg font-bold text-white mt-2 mb-2">Climate & Environmental Monitoring</h3>
+                        <p class="text-sm text-gray-400 leading-relaxed">Track deforestation, monitor water bodies, analyze air quality patterns, and model climate change impacts at scale.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== DEPLOY SECTION ========== -->
+    <section id="deploy" class="relative py-32 overflow-hidden">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid lg:grid-cols-2 gap-16 items-center">
+                <div class="reveal">
+                    <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#00e5a0]/5 border border-[#00e5a0]/20 mb-6">
+                        <span class="text-[10px] font-semibold text-[#00e5a0] tracking-widest uppercase">Quick Start</span>
+                    </div>
+                    <h2 class="text-4xl md:text-5xl font-black text-white mb-6">
+                        Deploy in<br><span class="gradient-text">Minutes, Not Months</span>
+                    </h2>
+                    <p class="text-gray-400 text-lg mb-8 leading-relaxed">
+                        Get your geospatial intelligence platform running with a single command. Docker Compose for development, Helm charts for production Kubernetes deployments.
+                    </p>
+
+                    <div class="space-y-4 mb-8">
+                        <div class="flex items-start gap-4">
+                            <div class="w-8 h-8 rounded-full bg-[#00e5a0]/10 border border-[#00e5a0]/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <span class="text-[#00e5a0] text-sm font-bold">1</span>
+                            </div>
+                            <div>
+                                <h4 class="text-sm font-semibold text-white mb-1">Clone the repository</h4>
+                                <p class="text-xs text-gray-500">Pull the latest release from GitHub</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-4">
+                            <div class="w-8 h-8 rounded-full bg-[#00b4d8]/10 border border-[#00b4d8]/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <span class="text-[#00b4d8] text-sm font-bold">2</span>
+                            </div>
+                            <div>
+                                <h4 class="text-sm font-semibold text-white mb-1">Configure your modules</h4>
+                                <p class="text-xs text-gray-500">Select which modules to enable in the config file</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-4">
+                            <div class="w-8 h-8 rounded-full bg-[#7c5cfc]/10 border border-[#7c5cfc]/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <span class="text-[#7c5cfc] text-sm font-bold">3</span>
+                            </div>
+                            <div>
+                                <h4 class="text-sm font-semibold text-white mb-1">Launch with Docker Compose</h4>
+                                <p class="text-xs text-gray-500">One command to spin up the entire stack</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <a href="https://github.com/EarthIQ" target="_blank" class="inline-flex items-center gap-2 text-[#00e5a0] font-medium hover:underline text-sm">
+                        Read the full documentation
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                    </a>
+                </div>
+
+                <!-- Code Block -->
+                <div class="reveal">
+                    <div class="code-block overflow-hidden">
+                        <div class="flex items-center justify-between px-5 py-3 border-b border-white/5">
+                            <div class="flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full bg-red-500/60"></span>
+                                <span class="w-3 h-3 rounded-full bg-yellow-500/60"></span>
+                                <span class="w-3 h-3 rounded-full bg-green-500/60"></span>
+                            </div>
+                            <span class="text-[10px] text-gray-600 font-mono">docker-compose.yml</span>
+                        </div>
+                        <div class="p-5 text-sm leading-7 overflow-x-auto">
+<pre class="text-gray-400"><span class="text-[#7c5cfc]">version</span>: <span class="text-[#00e5a0]">'3.9'</span>
+<span class="text-[#7c5cfc]">services</span>:
+  <span class="text-[#00b4d8]">geostore</span>:
+    <span class="text-gray-500">image</span>: earthiq/geostore:latest
+    <span class="text-gray-500">ports</span>: [<span class="text-[#00e5a0]">"5432:5432"</span>]
+    <span class="text-gray-500">volumes</span>:
+      - geo_data:/var/lib/postgresql
+
+  <span class="text-[#00b4d8]">geoflow</span>:
+    <span class="text-gray-500">image</span>: earthiq/geoflow:latest
+    <span class="text-gray-500">ports</span>: [<span class="text-[#00e5a0]">"8080:8080"</span>]
+    <span class="text-gray-500">depends_on</span>: [geostore]
+
+  <span class="text-[#00b4d8]">geoai</span>:
+    <span class="text-gray-500">image</span>: earthiq/geoai:latest
+    <span class="text-gray-500">ports</span>: [<span class="text-[#00e5a0]">"9090:9090"</span>]
+    <span class="text-gray-500">deploy</span>:
+      <span class="text-gray-500">resources</span>:
+        <span class="text-gray-500">reservations</span>:
+          <span class="text-gray-500">devices</span>:
+            - <span class="text-gray-500">driver</span>: nvidia
+
+  <span class="text-[#00b4d8]">geoview</span>:
+    <span class="text-gray-500">image</span>: earthiq/geoview:latest
+    <span class="text-gray-500">ports</span>: [<span class="text-[#00e5a0]">"3000:3000"</span>]</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== OPEN SOURCE CTA ========== -->
+    <section class="relative py-32 overflow-hidden">
+        <div class="absolute inset-0 hero-gradient"></div>
+        <div class="relative max-w-4xl mx-auto px-6 text-center">
+            <div class="reveal">
+                <div class="w-20 h-20 mx-auto mb-8 rounded-2xl bg-gradient-to-br from-[#00e5a0]/20 to-[#00b4d8]/20 border border-[#00e5a0]/30 flex items-center justify-center float">
+                    <svg class="w-10 h-10 text-[#00e5a0]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                </div>
+
+                <h2 class="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-6">
+                    Open Source.<br><span class="gradient-text">Community Driven.</span>
+                </h2>
+                <p class="text-gray-400 text-lg mb-10 max-w-2xl mx-auto leading-relaxed">
+                    EarthIQ is released under the MIT License. Deploy it on your infrastructure, modify it to your needs, and contribute back to the community. Your data stays yours.
+                </p>
+
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                    <a href="https://github.com/EarthIQ" target="_blank" class="group flex items-center gap-3 px-8 py-4 bg-white rounded-full text-[#050a14] font-semibold text-base hover:shadow-[0_0_40px_rgba(255,255,255,0.15)] transition-all duration-500 hover:scale-105">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                        Star on GitHub
+                        <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                    </a>
+                    <a href="https://github.com/EarthIQ" target="_blank" class="flex items-center gap-2 px-8 py-4 rounded-full border border-white/10 text-white font-medium text-base hover:border-[#00e5a0]/40 hover:bg-white/5 transition-all duration-300">
+                        Read the Docs
+                    </a>
+                </div>
+
+                <!-- Tech badges -->
+                <div class="mt-16 flex flex-wrap items-center justify-center gap-6 text-gray-600">
+                    <span class="text-xs uppercase tracking-wider">Built with</span>
+                    <span class="px-3 py-1.5 rounded-lg bg-white/5 text-xs text-gray-400">Python</span>
+                    <span class="px-3 py-1.5 rounded-lg bg-white/5 text-xs text-gray-400">TypeScript</span>
+                    <span class="px-3 py-1.5 rounded-lg bg-white/5 text-xs text-gray-400">PostgreSQL</span>
+                    <span class="px-3 py-1.5 rounded-lg bg-white/5 text-xs text-gray-400">Docker</span>
+                    <span class="px-3 py-1.5 rounded-lg bg-white/5 text-xs text-gray-400">Kubernetes</span>
+                    <span class="px-3 py-1.5 rounded-lg bg-white/5 text-xs text-gray-400">PyTorch</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== FOOTER ========== -->
+    <footer class="relative border-t border-white/5 py-16">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid md:grid-cols-4 gap-12 mb-12">
+                <!-- Brand -->
+                <div class="md:col-span-2">
+                    <div class="flex items-center gap-3 mb-4">
+                        <svg viewBox="0 0 40 40" class="w-8 h-8">
+                            <circle cx="20" cy="20" r="16" fill="none" stroke="url(#logoGrad2)" stroke-width="1.5" opacity="0.6"/>
+                            <circle cx="20" cy="20" r="10" fill="none" stroke="url(#logoGrad2)" stroke-width="1.5"/>
+                            <circle cx="20" cy="20" r="3" fill="url(#logoGrad2)"/>
+                            <defs>
+                                <linearGradient id="logoGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#00e5a0"/>
+                                    <stop offset="100%" stop-color="#00b4d8"/>
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                        <span class="text-lg font-bold text-white">Earth<span class="gradient-text">IQ</span></span>
+                    </div>
+                    <p class="text-sm text-gray-500 max-w-sm leading-relaxed mb-6">
+                        From Geospatial Data to Business Intelligence. The open-source platform for organizations that demand full control over their spatial data.
+                    </p>
+                    <div class="flex items-center gap-4">
+                        <a href="https://github.com/EarthIQ" target="_blank" class="w-9 h-9 rounded-full bg-white/5 border border-white/5 flex items-center justify-center text-gray-500 hover:text-[#00e5a0] hover:border-[#00e5a0]/30 transition-all">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Links -->
+                <div>
+                    <h4 class="text-xs font-semibold text-white uppercase tracking-widest mb-4">Platform</h4>
+                    <ul class="space-y-3">
+                        <li><a href="#features" class="text-sm text-gray-500 hover:text-[#00e5a0] transition-colors">Features</a></li>
+                        <li><a href="#modules" class="text-sm text-gray-500 hover:text-[#00e5a0] transition-colors">Modules</a></li>
+                        <li><a href="#architecture" class="text-sm text-gray-500 hover:text-[#00e5a0] transition-colors">Architecture</a></li>
+                        <li><a href="#deploy" class="text-sm text-gray-500 hover:text-[#00e5a0] transition-colors">Quick Start</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-xs font-semibold text-white uppercase tracking-widest mb-4">Community</h4>
+                    <ul class="space-y-3">
+                        <li><a href="https://github.com/EarthIQ" target="_blank" class="text-sm text-gray-500 hover:text-[#00e5a0] transition-colors">GitHub</a></li>
+                        <li><a href="https://github.com/EarthIQ" target="_blank" class="text-sm text-gray-500 hover:text-[#00e5a0] transition-colors">Documentation</a></li>
+                        <li><a href="https://github.com/EarthIQ" target="_blank" class="text-sm text-gray-500 hover:text-[#00e5a0] transition-colors">Contributing</a></li>
+                        <li><a href="https://github.com/EarthIQ" target="_blank" class="text-sm text-gray-500 hover:text-[#00e5a0] transition-colors">Discussions</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Bottom bar -->
+            <div class="pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4">
+                <p class="text-xs text-gray-600">© 2025 EarthIQ.org · Released under the MIT License</p>
+                <p class="text-xs text-gray-600">From Geospatial Data to Business Intelligence</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ========== SCRIPTS ========== -->
+    <script>
+    // ===== PARTICLE SYSTEM =====
+    (function() {
+        const canvas = document.getElementById('particles');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        let w, h;
+
+        function resize() {
+            w = canvas.width = window.innerWidth;
+            h = canvas.height = window.innerHeight;
+        }
+        resize();
+        window.addEventListener('resize', resize);
+
+        class Particle {
+            constructor() {
+                this.reset();
+            }
+            reset() {
+                this.x = Math.random() * w;
+                this.y = Math.random() * h;
+                this.vx = (Math.random() - 0.5) * 0.3;
+                this.vy = (Math.random() - 0.5) * 0.3;
+                this.size = Math.random() * 1.5 + 0.5;
+                this.opacity = Math.random() * 0.3 + 0.05;
+                this.color = Math.random() > 0.5 ? '0,229,160' : '0,180,216';
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                if (this.x < 0 || this.x > w) this.vx *= -1;
+                if (this.y < 0 || this.y > h) this.vy *= -1;
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(${this.color},${this.opacity})`;
+                ctx.fill();
+            }
+        }
+
+        for (let i = 0; i < 80; i++) particles.push(new Particle());
+
+        function connectParticles() {
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < 150) {
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.strokeStyle = `rgba(0,229,160,${0.03 * (1 - dist / 150)})`;
+                        ctx.lineWidth = 0.5;
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, w, h);
+            particles.forEach(p => { p.update(); p.draw(); });
+            connectParticles();
+            requestAnimationFrame(animate);
+        }
+        animate();
+    })();
+
+    // ===== GLOBE CANVAS =====
+    (function() {
+        const canvas = document.getElementById('globe-canvas');
+        const ctx = canvas.getContext('2d');
+        let w, h, time = 0;
+
+        function resize() {
+            w = canvas.width = canvas.offsetWidth;
+            h = canvas.height = canvas.offsetHeight;
+        }
+        resize();
+        window.addEventListener('resize', resize);
+
+        const points = [];
+        const numPoints = 200;
+        for (let i = 0; i < numPoints; i++) {
+            const theta = Math.random() * Math.PI * 2;
+            const phi = Math.acos(2 * Math.random() - 1);
+            points.push({ theta, phi, pulseSpeed: Math.random() * 0.02 + 0.005 });
+        }
+
+        function project(theta, phi, radius) {
+            const x = radius * Math.sin(phi) * Math.cos(theta);
+            const y = radius * Math.cos(phi);
+            const z = radius * Math.sin(phi) * Math.sin(theta);
+            return { x, y, z };
+        }
+
+        function animate() {
+            time += 0.003;
+            ctx.clearRect(0, 0, w, h);
+
+            const cx = w * 0.5;
+            const cy = h * 0.48;
+            const radius = Math.min(w, h) * 0.28;
+
+            // Draw globe circles
+            for (let i = 0; i < 6; i++) {
+                const r = radius * (0.3 + i * 0.14);
+                ctx.beginPath();
+                ctx.arc(cx, cy, r, 0, Math.PI * 2);
+                ctx.strokeStyle = `rgba(0,229,160,${0.03 - i * 0.004})`;
+                ctx.lineWidth = 0.5;
+                ctx.stroke();
+            }
+
+            // Draw latitude lines
+            for (let lat = -60; lat <= 60; lat += 30) {
+                const latRad = (lat * Math.PI) / 180;
+                const r = radius * Math.cos(latRad);
+                const yOff = radius * Math.sin(latRad) * 0.3;
+                ctx.beginPath();
+                ctx.ellipse(cx, cy - yOff, r, r * 0.3, 0, 0, Math.PI * 2);
+                ctx.strokeStyle = 'rgba(0,229,160,0.04)';
+                ctx.lineWidth = 0.5;
+                ctx.stroke();
+            }
+
+            // Draw points on globe
+            points.forEach((p, i) => {
+                const rotatedTheta = p.theta + time;
+                const pos = project(rotatedTheta, p.phi, radius);
+
+                // Only draw if "facing us"
+                if (pos.z > -radius * 0.2) {
+                    const screenX = cx + pos.x;
+                    const screenY = cy + pos.y * 0.8;
+                    const depthFactor = (pos.z + radius) / (2 * radius);
+                    const size = 1 + depthFactor * 2;
+                    const pulse = Math.sin(time * 20 * p.pulseSpeed) * 0.3 + 0.7;
+
+                    ctx.beginPath();
+                    ctx.arc(screenX, screenY, size, 0, Math.PI * 2);
+                    ctx.fillStyle = i % 3 === 0
+                        ? `rgba(0,229,160,${depthFactor * 0.4 * pulse})`
+                        : i % 3 === 1
+                            ? `rgba(0,180,216,${depthFactor * 0.3 * pulse})`
+                            : `rgba(124,92,252,${depthFactor * 0.3 * pulse})`;
+                    ctx.fill();
+
+                    // Connect nearby points
+                    for (let j = i + 1; j < Math.min(i + 5, points.length); j++) {
+                        const rotatedTheta2 = points[j].theta + time;
+                        const pos2 = project(rotatedTheta2, points[j].phi, radius);
+                        if (pos2.z > -radius * 0.2) {
+                            const dx = pos.x - pos2.x;
+                            const dy = pos.y - pos2.y;
+                            const dist = Math.sqrt(dx * dx + dy * dy);
+                            if (dist < radius * 0.4) {
+                                ctx.beginPath();
+                                ctx.moveTo(cx + pos.x, cy + pos.y * 0.8);
+                                ctx.lineTo(cx + pos2.x, cy + pos2.y * 0.8);
+                                ctx.strokeStyle = `rgba(0,229,160,${0.05 * depthFactor * (1 - dist / (radius * 0.4))})`;
+                                ctx.lineWidth = 0.5;
+                                ctx.stroke();
+                            }
+                        }
+                    }
+                }
+            });
+
+            requestAnimationFrame(animate);
+        }
+        animate();
+    })();
+
+    // ===== NAVBAR SCROLL EFFECT =====
+    (function() {
+        const navbar = document.getElementById('navbar');
+        let lastScroll = 0;
+
+        window.addEventListener('scroll', () => {
+            const scrollY = window.scrollY;
+            if (scrollY > 50) {
+                navbar.classList.add('nav-blur', 'bg-[#050a14]/80', 'border-b', 'border-white/5');
+            } else {
+                navbar.classList.remove('nav-blur', 'bg-[#050a14]/80', 'border-b', 'border-white/5');
+            }
+            lastScroll = scrollY;
+        });
+    })();
+
+    // ===== MOBILE MENU =====
+    (function() {
+        const toggle = document.getElementById('menu-toggle');
+        const menu = document.getElementById('mobile-menu');
+        const close = document.getElementById('menu-close');
+
+        toggle.addEventListener('click', () => menu.classList.add('open'));
+        close.addEventListener('click', () => menu.classList.remove('open'));
+
+        menu.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => menu.classList.remove('open'));
+        });
+    })();
+
+    // ===== SCROLL REVEAL =====
+    (function() {
+        const reveals = document.querySelectorAll('.reveal');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        });
+
+        reveals.forEach(el => observer.observe(el));
+    })();
+
+    // ===== SMOOTH SCROLL =====
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function(e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+    });
+    </script>
 </body>
 </html>
+
